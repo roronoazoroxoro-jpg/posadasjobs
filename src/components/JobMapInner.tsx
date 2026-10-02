@@ -31,6 +31,12 @@ function spread(jobs: JobMapItem[]) {
   });
 }
 
+/** Tiles gratis sin API key (Esri). OSM.org bloquea muchos deploys con 403. */
+const TILES = {
+  light: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",
+  dark: "https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+};
+
 export default function JobMapInner({ jobs, height = 460, dark = false }: { jobs: JobMapItem[]; height?: number; dark?: boolean }) {
   const points = useMemo(() => spread(jobs), [jobs]);
   const bounds = useMemo(
@@ -47,13 +53,11 @@ export default function JobMapInner({ jobs, height = 460, dark = false }: { jobs
       bounds={bounds}
       scrollWheelZoom={false}
       style={{ height, width: "100%" }}
-      className={`z-0 pj-map${dark ? " pj-map--dark" : ""}`}
+      className="z-0 pj-map"
     >
-      {/* OpenStreetMap: gratis, sin API key */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        subdomains="abc"
+        attribution='Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Source: Esri, OpenStreetMap'
+        url={dark ? TILES.dark : TILES.light}
         maxZoom={19}
       />
       {points.map((j) => (

@@ -167,16 +167,6 @@ body {
   font-family: var(--font-jakarta), system-ui, sans-serif;
   background: #e8f5ef;
 }
-/* Modo oscuro del mapa sin API key: OSM + filtro CSS */
-.pj-map--dark .leaflet-tile-pane {
-  filter: invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9);
-}
-.pj-map--dark .leaflet-container {
-  background: #0b1f1a;
-}
-.pj-map--dark .leaflet-control-zoom a {
-  filter: invert(1) hue-rotate(180deg);
-}
 
 /* Dark mode */
 html.dark {
