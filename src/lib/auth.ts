@@ -8,10 +8,10 @@ const SESSION_DAYS = 14;
 
 function secret() {
   const value = process.env.AUTH_SECRET;
-  if (!value && process.env.NODE_ENV === "production") {
+  if (!value && process.env.NODE_ENV === "production" && process.env.VERCEL !== "1") {
     throw new Error("Falta AUTH_SECRET en el archivo .env");
   }
-  return value || "posadasjobs-dev-secret";
+  return value || "posadasjobs-vercel-demo-secret-change-me";
 }
 
 function sign(body: string) {
@@ -31,7 +31,7 @@ export function sessionCookie(token: string) {
     options: {
       httpOnly: true,
       sameSite: "lax" as const,
-      secure: process.env.COOKIE_SECURE === "true",
+      secure: process.env.COOKIE_SECURE === "true" || process.env.VERCEL === "1",
       path: "/",
       maxAge: 60 * 60 * 24 * SESSION_DAYS,
     },
