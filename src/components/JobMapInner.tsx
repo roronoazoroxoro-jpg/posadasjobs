@@ -41,18 +41,19 @@ export default function JobMapInner({ jobs, height = 460, dark = false }: { jobs
 
   return (
     <MapContainer
-      key={points.map((p) => p.id).join("|")}
+      key={`${dark ? "dark" : "light"}-${points.map((p) => p.id).join("|")}`}
       center={center}
       zoom={points.length === 1 ? 15 : 12}
       bounds={bounds}
       scrollWheelZoom={false}
       style={{ height, width: "100%" }}
-      className="z-0"
+      className={`z-0 pj-map${dark ? " pj-map--dark" : ""}`}
     >
+      {/* OpenStreetMap: gratis, sin API key */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url={`https://{s}.basemaps.cartocdn.com/rastertiles/${dark ? "dark_all" : "voyager"}/{z}/{x}/{y}{r}.png`}
-        subdomains="abcd"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        subdomains="abc"
         maxZoom={19}
       />
       {points.map((j) => (
