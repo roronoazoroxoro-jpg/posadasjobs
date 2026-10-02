@@ -1,0 +1,99 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  candidate CandidateProfile?
+  company   CompanyProfile?
+}
+
+model CandidateProfile {
+  id           String   @id @default(cuid())
+  userId       String   @unique
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline     String   @default("")
+  bio          String   @default("")
+  skills       String   @default("[]")
+  experience   String   @default("")
+  education    String   @default("")
+  location     String   @default("Posadas, Misiones")
+  phone        String   @default("")
+  cvText       String   @default("")
+  linkedin     String   @default("")
+  portfolio    String   @default("")
+  availability String   @default("Disponible")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications Application[]
+}
+
+model CompanyProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName String
+  description String   @default("")
+  industry    String   @default("")
+  website     String   @default("")
+  location    String   @default("Posadas, Misiones")
+  phone       String   @default("")
+  size        String   @default("1-10")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  jobs Job[]
+}
+
+model Job {
+  id           String   @id @default(cuid())
+  companyId    String
+  company      CompanyProfile @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  requirements String   @default("")
+  location     String   @default("Posadas, Misiones")
+  type         String   @default("FULL_TIME")
+  modality     String   @default("PRESENCIAL")
+  salaryMin    Int?
+  salaryMax    Int?
+  skills       String   @default("[]")
+  status       String   @default("OPEN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  applications Application[]
+
+  @@index([companyId, status])
+  @@index([status, createdAt])
+}
+
+model Application {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  coverLetter String   @default("")
+  status      String   @default("PENDING")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([jobId, candidateId])
+  @@index([candidateId])
+  @@index([jobId, status])
+}

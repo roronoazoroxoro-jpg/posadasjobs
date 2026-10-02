@@ -1,0 +1,5 @@
+{
+  "buildCommand": "prisma generate && node -e \"require('fs').copyFileSync('prisma/prod-seed.db','prisma/dev.db')\" && next build",
+  "framework": "nextjs",
+  "regions": ["iad1"]
+}
