@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
-import { Trash2, Upload } from "lucide-react";
+import { Trash2, Upload, Wand2 } from "lucide-react";
 import { useSession } from "@/components/session";
 import { api } from "@/lib/format";
 import { CvViewer } from "@/components/CvViewer";
@@ -102,6 +103,20 @@ export default function CvPage() {
           ) : null}
         </div>
       </div>
+
+      <Link
+        href={`/talentos/${user.candidate.id}/cv`}
+        className="group flex items-center gap-4 rounded-3xl border border-forest-100 bg-gradient-to-r from-forest-600 to-river-600 p-5 text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-glow"
+      >
+        <span className="rounded-2xl bg-white/15 p-3 transition group-hover:rotate-[-6deg]">
+          <Wand2 className="h-6 w-6" />
+        </span>
+        <span className="flex-1">
+          <span className="block font-display text-lg font-bold">Generador de CV en PDF</span>
+          <span className="block text-sm text-white/80">Armamos un CV con diseño profesional usando tu perfil, skills y proyectos. Listo para descargar.</span>
+        </span>
+        <span className="hidden rounded-full bg-white px-4 py-2 text-sm font-semibold text-forest-800 sm:block">Generar</span>
+      </Link>
 
       {message ? <p className="text-sm text-forest-700">{message}</p> : null}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}

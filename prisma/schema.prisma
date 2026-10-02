@@ -9,16 +9,47 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  role         String
-  name         String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @default("")
+  role          String
+  name          String
+  emailVerified DateTime?
+  googleId      String?   @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  candidate CandidateProfile?
-  company   CompanyProfile?
+  candidate     CandidateProfile?
+  company       CompanyProfile?
+  notifications Notification[]
+  authTokens    AuthToken[]
+}
+
+model AuthToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, type])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  href      String   @default("")
+  kind      String   @default("info")
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model CandidateProfile {
@@ -43,11 +74,14 @@ model CandidateProfile {
   cvFileUrl    String   @default("")
   cvFileName   String   @default("")
   cvPreviews   String   @default("[]")
+  views        Int      @default(0)
+  cvViews      Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  applications Application[]
-  cvFile       CvFile?
+  applications  Application[]
+  cvFile        CvFile?
+  conversations Conversation[]
 }
 
 model CvFile {
@@ -73,7 +107,8 @@ model CompanyProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  jobs Job[]
+  jobs          Job[]
+  conversations Conversation[]
 }
 
 model Job {
@@ -90,6 +125,10 @@ model Job {
   salaryMax    Int?
   skills       String   @default("[]")
   status       String   @default("OPEN")
+  zone         String   @default("Centro")
+  lat          Float?
+  lng          Float?
+  views        Int      @default(0)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -113,6 +152,35 @@ model Application {
   @@unique([jobId, candidateId])
   @@index([candidateId])
   @@index([jobId, status])
+}
+
+model Conversation {
+  id            String           @id @default(cuid())
+  companyId     String
+  company       CompanyProfile   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  candidateId   String
+  candidate     CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  jobTitle      String           @default("")
+  lastMessageAt DateTime         @default(now())
+  createdAt     DateTime         @default(now())
+
+  messages Message[]
+
+  @@unique([companyId, candidateId])
+  @@index([candidateId, lastMessageAt])
+  @@index([companyId, lastMessageAt])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderUserId   String
+  body           String
+  readAt         DateTime?
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId, createdAt])
 }
 
 model SavedJob {

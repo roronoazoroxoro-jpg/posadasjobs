@@ -46,7 +46,7 @@ function RegisterForm() {
           <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-forest-400/40 to-river-500/40 blur-2xl" />
           <Image
             src={role === "COMPANY" ? "/art/toucan-interview.jpg" : "/art/toucan-hired.jpg"}
-            alt="Ilustración del tucán de PosadasJobs"
+            alt="Ilustración del tucán de TucanJobs"
             width={512}
             height={512}
             priority
@@ -55,7 +55,7 @@ function RegisterForm() {
           />
         </div>
         <p className="mt-4 font-display text-2xl font-bold text-forest-950">
-          Unite a Posadas<span className="text-river-600">Jobs</span>
+          Unite a Tucan<span className="text-river-600">Jobs</span>
         </p>
       </div>
       <div className="rounded-3xl border border-forest-100 bg-white/90 p-8 shadow-soft">

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { forbidden, getSessionUser, parseJsonArray, unauthorized } from "@/lib/auth";
+import { forbidden, getSessionUser, parseJsonArray, toMatchCandidate, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { matchScore } from "@/lib/match";
+import { zoneCoords } from "@/lib/zones";
 
 export const runtime = "nodejs";
 
@@ -26,7 +28,24 @@ export async function GET(_request: Request, ctx: Ctx) {
     alreadyApplied = Boolean(app);
   }
 
+  const isOwner = user?.company?.id === job.companyId;
+  if (!isOwner) {
+    await prisma.job.update({ where: { id }, data: { views: { increment: 1 } } }).catch(() => undefined);
+  }
+
+  const skills = parseJsonArray(job.skills);
+  const coords = job.lat != null && job.lng != null ? { lat: job.lat, lng: job.lng } : zoneCoords(job.zone);
+  const match = user?.candidate
+    ? matchScore(toMatchCandidate(user.candidate), {
+        title: job.title,
+        description: job.description,
+        requirements: job.requirements,
+        skills,
+      })
+    : null;
+
   return NextResponse.json({
+    match,
     job: {
       id: job.id,
       title: job.title,
@@ -37,8 +56,12 @@ export async function GET(_request: Request, ctx: Ctx) {
       modality: job.modality,
       salaryMin: job.salaryMin,
       salaryMax: job.salaryMax,
-      skills: parseJsonArray(job.skills),
+      skills,
       status: job.status,
+      zone: job.zone,
+      lat: coords.lat,
+      lng: coords.lng,
+      views: job.views + (isOwner ? 0 : 1),
       createdAt: job.createdAt.toISOString(),
       applicationsCount: job._count.applications,
       company: {
@@ -89,6 +112,12 @@ export async function PUT(request: Request, ctx: Ctx) {
       salaryMax: body.salaryMax !== undefined ? (body.salaryMax ? Number(body.salaryMax) : null) : existing.salaryMax,
       status: typeof body.status === "string" ? body.status : existing.status,
       skills: JSON.stringify(skills),
+      ...(typeof body.zone === "string"
+        ? (() => {
+            const z = zoneCoords(body.zone);
+            return { zone: z.name, lat: z.lat, lng: z.lng };
+          })()
+        : {}),
     },
     include: {
       company: { select: { id: true, companyName: true, industry: true, location: true } },

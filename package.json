@@ -1,5 +1,5 @@
 {
-  "name": "posadasjobs",
+  "name": "tucanjobs",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -15,13 +15,16 @@
   "dependencies": {
     "@prisma/client": "^6.5.0",
     "bcryptjs": "^3.0.3",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.484.0",
     "next": "^15.2.4",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-leaflet": "^5.0.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^22.13.14",
     "@types/react": "^19.0.12",
     "@types/react-dom": "^19.0.4",

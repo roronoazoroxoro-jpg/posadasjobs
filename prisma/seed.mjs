@@ -30,7 +30,7 @@ const VALENTIN_PROJECTS = [
     url: "https://mcneumaticoss-chi.vercel.app",
   },
   {
-    name: "PosadasJobs",
+    name: "TucanJobs",
     description: "Plataforma de empleo para Posadas: perfiles, CV, empresas y postulaciones.",
     url: "https://posadasjobs.vercel.app",
   },
@@ -204,8 +204,24 @@ const VALENTIN_SKILLS = [
   "Ciberseguridad",
 ];
 
+const ZONES = {
+  Centro: [-27.3671, -55.8961],
+  Costanera: [-27.3598, -55.8925],
+  "Villa Sarita": [-27.374, -55.887],
+  "El Brete": [-27.3565, -55.9105],
+  "Villa Urquiza": [-27.383, -55.905],
+  "Miguel Lanús": [-27.432, -55.889],
+};
+
+function zone(name) {
+  const [lat, lng] = ZONES[name];
+  return { zone: name, lat, lng };
+}
+
 async function main() {
   // Reset clean seed so Valentin always is the featured profile
+  await prisma.message.deleteMany();
+  await prisma.conversation.deleteMany();
   await prisma.application.deleteMany();
   await prisma.savedJob.deleteMany();
   await prisma.cvFile.deleteMany();
@@ -248,16 +264,16 @@ async function main() {
   });
 
   // Keep secondary demo candidate
-  await prisma.user.create({
+  const demoCandidate = await prisma.user.create({
     data: {
-      email: "candidato@posadasjobs.com",
+      email: "candidato@tucanjobs.com",
       passwordHash,
       role: "CANDIDATE",
       name: "Demo Candidato",
       candidate: {
         create: {
           headline: "Cuenta demo de candidato",
-          bio: "Perfil de prueba para explorar PosadasJobs.",
+          bio: "Perfil de prueba para explorar TucanJobs.",
           skills: JSON.stringify(["React", "TypeScript"]),
           experience: "Demo",
           education: "Demo",
@@ -269,11 +285,12 @@ async function main() {
         },
       },
     },
+    include: { candidate: true },
   });
 
   const company1 = await prisma.user.create({
     data: {
-      email: "empresa@posadasjobs.com",
+      email: "empresa@tucanjobs.com",
       passwordHash,
       role: "COMPANY",
       name: "RRHH Tech Misiones",
@@ -295,7 +312,7 @@ async function main() {
 
   const company2 = await prisma.user.create({
     data: {
-      email: "salud@posadasjobs.com",
+      email: "salud@tucanjobs.com",
       passwordHash,
       role: "COMPANY",
       name: "RRHH Salud Digital NEA",
@@ -316,7 +333,7 @@ async function main() {
 
   const company3 = await prisma.user.create({
     data: {
-      email: "ips@posadasjobs.com",
+      email: "ips@tucanjobs.com",
       passwordHash,
       role: "COMPANY",
       name: "RRHH IPSM Demo",
@@ -350,6 +367,7 @@ async function main() {
         salaryMax: 1800000,
         skills: JSON.stringify(["Next.js", "TypeScript", "Node.js", "Prisma"]),
         status: "OPEN",
+        ...zone("Centro"),
       },
       {
         companyId: company1.company.id,
@@ -363,6 +381,7 @@ async function main() {
         salaryMax: 1400000,
         skills: JSON.stringify(["Linux", "Docker", "Nginx", "Redes"]),
         status: "OPEN",
+        ...zone("Villa Sarita"),
       },
       {
         companyId: company2.company.id,
@@ -376,6 +395,7 @@ async function main() {
         salaryMax: 1600000,
         skills: JSON.stringify(["Python", "React", "PostgreSQL", "Salud"]),
         status: "OPEN",
+        ...zone("Villa Urquiza"),
       },
       {
         companyId: company2.company.id,
@@ -389,6 +409,7 @@ async function main() {
         salaryMax: 2000000,
         skills: JSON.stringify(["OpenCV", "YOLO", "Python", "IA"]),
         status: "OPEN",
+        ...zone("Costanera"),
       },
       {
         companyId: company3.company.id,
@@ -402,6 +423,7 @@ async function main() {
         salaryMax: 1300000,
         skills: JSON.stringify(["Soporte IT", "Redes", "MikroTik", "Python"]),
         status: "OPEN",
+        ...zone("El Brete"),
       },
       {
         companyId: company1.company.id,
@@ -415,13 +437,45 @@ async function main() {
         salaryMax: 1100000,
         skills: JSON.stringify(["React", "PWA", "JavaScript", "UX"]),
         status: "OPEN",
+        ...zone("Miguel Lanús"),
       },
     ],
   });
 
+  const t0 = Date.now() - 1000 * 60 * 90;
+  await prisma.conversation.create({
+    data: {
+      companyId: company1.company.id,
+      candidateId: demoCandidate.candidate.id,
+      jobTitle: "Mobile / PWA Developer",
+      lastMessageAt: new Date(t0 + 1000 * 60 * 20),
+      messages: {
+        create: [
+          {
+            senderUserId: company1.id,
+            body: "¡Hola! Vimos tu perfil en TucanJobs y nos interesa para el puesto de Mobile / PWA. ¿Tenés disponibilidad para una charla esta semana?",
+            createdAt: new Date(t0),
+            readAt: new Date(t0 + 1000 * 60 * 10),
+          },
+          {
+            senderUserId: demoCandidate.id,
+            body: "¡Hola! Sí, me encantaría. Puedo el jueves por la tarde. ¿Les queda bien?",
+            createdAt: new Date(t0 + 1000 * 60 * 12),
+            readAt: new Date(t0 + 1000 * 60 * 15),
+          },
+          {
+            senderUserId: company1.id,
+            body: "Perfecto, jueves 17 h. Te esperamos con el mate listo 🧉",
+            createdAt: new Date(t0 + 1000 * 60 * 20),
+          },
+        ],
+      },
+    },
+  });
+
   console.log("Seed OK — Valentín Vazquez destacado");
   console.log("Login Valentín:", valentin.email, "/ Posadas2026!");
-  console.log("Empresa demo: empresa@posadasjobs.com / Posadas2026!");
+  console.log("Empresa demo: empresa@tucanjobs.com / Posadas2026!");
 }
 
 main()

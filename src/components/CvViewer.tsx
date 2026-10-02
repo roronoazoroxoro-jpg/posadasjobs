@@ -5,6 +5,7 @@ import { Download, ExternalLink, FileText, Printer } from "lucide-react";
 import { Button } from "./ui";
 
 type Props = {
+  candidateId?: string;
   name: string;
   cvText?: string;
   cvFileUrl?: string;
@@ -20,8 +21,14 @@ function escapeHtml(value: string) {
   return value.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 }
 
-export function CvViewer({ name, cvText, cvFileUrl, cvFileName, cvPreviews = [] }: Props) {
+export function CvViewer({ candidateId, name, cvText, cvFileUrl, cvFileName, cvPreviews = [] }: Props) {
   const fileName = cvFileName || `CV_${name.replace(/\s+/g, "_")}.pdf`;
+
+  function track() {
+    if (!candidateId) return;
+    const url = `/api/candidates/${candidateId}/cv`;
+    if (!navigator.sendBeacon?.(url)) fetch(url, { method: "POST", keepalive: true }).catch(() => undefined);
+  }
 
   function downloadText() {
     const blob = new Blob([cvText || ""], { type: "text/plain;charset=utf-8" });
@@ -60,12 +67,12 @@ h1{color:#047857;margin:0 0 16px}pre{white-space:pre-wrap;font-family:inherit;fo
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a href={cvFileUrl} target="_blank" rel="noreferrer">
+              <a href={cvFileUrl} target="_blank" rel="noreferrer" onClick={track}>
                 <Button type="button" variant="secondary">
                   <ExternalLink className="h-4 w-4" /> Abrir
                 </Button>
               </a>
-              <a href={downloadHref(cvFileUrl)} download={fileName}>
+              <a href={downloadHref(cvFileUrl)} download={fileName} onClick={track}>
                 <Button type="button">
                   <Download className="h-4 w-4" /> Descargar PDF
                 </Button>
@@ -80,6 +87,7 @@ h1{color:#047857;margin:0 0 16px}pre{white-space:pre-wrap;font-family:inherit;fo
                   href={cvFileUrl}
                   target="_blank"
                   rel="noreferrer"
+                  onClick={track}
                   className="group mx-auto block w-full max-w-3xl overflow-hidden rounded-xl bg-white shadow-soft ring-1 ring-forest-100 transition duration-300 hover:-translate-y-1 hover:shadow-glow"
                 >
                   <Image

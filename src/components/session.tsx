@@ -4,14 +4,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { Briefcase, Building2, Menu, UserRound, X } from "lucide-react";
+import { Briefcase, Building2, Menu, MessageCircle, UserRound, X } from "lucide-react";
 import { api } from "@/lib/format";
+import { ThemeToggle } from "./theme";
 
 type PublicUser = {
   id: string;
   name: string;
   email: string;
   role: string;
+  emailVerified?: boolean;
   candidate: {
     id: string;
     headline: string;
@@ -48,21 +50,48 @@ type PublicUser = {
 type SessionCtx = {
   user: PublicUser | null;
   loading: boolean;
+  unread: number;
   refresh: () => Promise<void>;
+  refreshUnread: () => Promise<void>;
   logout: () => Promise<void>;
 };
 
 const Ctx = createContext<SessionCtx>({
   user: null,
   loading: true,
+  unread: 0,
   refresh: async () => {},
+  refreshUnread: async () => {},
   logout: async () => {},
 });
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unread, setUnread] = useState(0);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const refreshUnread = useCallback(async () => {
+    try {
+      const data = await api<{ unread: number }>("/api/conversations?count=1");
+      setUnread(data.unread);
+    } catch {
+      setUnread(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setUnread(0);
+      return;
+    }
+    void refreshUnread();
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") void refreshUnread();
+    }, 30000);
+    return () => clearInterval(timer);
+  }, [user, pathname, refreshUnread]);
 
   const refresh = useCallback(async () => {
     try {
@@ -86,7 +115,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     router.refresh();
   };
 
-  return <Ctx.Provider value={{ user, loading, refresh, logout }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, loading, unread, refresh, refreshUnread, logout }}>{children}</Ctx.Provider>;
 }
 
 export function useSession() {
@@ -100,7 +129,7 @@ const NAV = [
 ];
 
 export function SiteHeader() {
-  const { user, logout, loading } = useSession();
+  const { user, logout, loading, unread } = useSession();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -120,7 +149,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className={`sticky top-0 z-40 transition-all duration-300 ${
+      className={`sticky top-0 z-40 transition-all duration-300 print:hidden ${
         scrolled ? "border-b border-forest-200/70 bg-white/80 shadow-soft backdrop-blur-xl" : "border-b border-transparent bg-white/40 backdrop-blur-md"
       }`}
     >
@@ -130,14 +159,14 @@ export function SiteHeader() {
             <span className="absolute inset-0 rounded-full bg-forest-400/40 opacity-0 blur-md transition group-hover:opacity-100" />
             <Image
               src="/toucan-mate.jpg"
-              alt="PosadasJobs"
+              alt="TucanJobs"
               width={40}
               height={40}
               className="relative rounded-full object-cover ring-2 ring-forest-300 transition duration-300 group-hover:rotate-[-8deg] group-hover:scale-110"
             />
           </span>
           <span className="font-display text-lg font-bold tracking-tight text-forest-900">
-            Posadas<span className="text-gradient">Jobs</span>
+            Tucan<span className="text-gradient">Jobs</span>
           </span>
         </Link>
 
@@ -158,10 +187,23 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           {loading ? (
             <div className="h-9 w-24 animate-pulse rounded-full bg-forest-100" />
           ) : user ? (
             <>
+              <Link
+                href="/panel/mensajes"
+                aria-label={unread ? `Mensajes (${unread} sin leer)` : "Mensajes"}
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-forest-200 bg-white/70 text-forest-800 transition hover:scale-105 hover:border-river-300"
+              >
+                <MessageCircle className="h-[18px] w-[18px]" />
+                {unread ? (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-gradient-to-r from-forest-500 to-river-600 px-1 text-[10px] font-bold text-white ring-2 ring-white">
+                    {unread > 9 ? "9+" : unread}
+                  </span>
+                ) : null}
+              </Link>
               <Link
                 href="/panel"
                 className="btn-shine hidden rounded-full bg-gradient-to-r from-forest-600 to-river-600 px-4 py-2 text-sm font-semibold text-white shadow-soft transition hover:-translate-y-0.5 hover:shadow-glow sm:inline-flex"
@@ -247,7 +289,7 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="relative mt-24 overflow-hidden bg-gradient-to-br from-forest-950 via-forest-900 to-river-950 text-white">
+    <footer className="relative mt-24 overflow-hidden print:hidden bg-gradient-to-br from-forest-950 via-forest-900 to-river-950 text-white">
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-forest-500/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 right-0 h-72 w-72 rounded-full bg-river-500/20 blur-3xl" />
       <div className="relative mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
@@ -255,7 +297,7 @@ export function SiteFooter() {
           <div className="flex items-center gap-3">
             <Image src="/toucan-mate.jpg" alt="" width={48} height={48} className="rounded-full object-cover ring-2 ring-white/20" />
             <div>
-              <p className="font-display text-xl font-bold">PosadasJobs</p>
+              <p className="font-display text-xl font-bold">TucanJobs</p>
               <p className="text-sm text-white/60">Talento y empresas del NEA, con mate.</p>
             </div>
           </div>
@@ -298,7 +340,7 @@ export function SiteFooter() {
       </div>
       <div className="relative border-t border-white/10">
         <p className="mx-auto max-w-6xl px-4 py-5 text-xs text-white/50 sm:px-6">
-          © {new Date().getFullYear()} PosadasJobs · Posadas, Misiones, Argentina
+          © {new Date().getFullYear()} TucanJobs · Posadas, Misiones, Argentina
         </p>
       </div>
     </footer>

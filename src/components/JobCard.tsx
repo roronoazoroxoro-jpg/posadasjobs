@@ -2,6 +2,7 @@ import { JOB_TYPES, MODALITIES, formatSalary, timeAgo } from "@/lib/format";
 import { Badge } from "./ui";
 import Link from "next/link";
 import { ArrowUpRight, Briefcase, MapPin } from "lucide-react";
+import { MatchBadge, type MatchInfo } from "./Match";
 
 export type JobCardData = {
   id: string;
@@ -15,6 +16,10 @@ export type JobCardData = {
   skills: string[];
   createdAt: string;
   company: { id: string; companyName: string; industry?: string };
+  zone?: string;
+  lat?: number;
+  lng?: number;
+  match?: MatchInfo;
 };
 
 export function JobCard({ job }: { job: JobCardData }) {
@@ -36,10 +41,11 @@ export function JobCard({ job }: { job: JobCardData }) {
         </div>
         <ArrowUpRight className="h-5 w-5 shrink-0 text-forest-300 transition duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-river-600" />
       </div>
+      {job.match ? <MatchBadge match={job.match} className="mt-3" /> : null}
       <p className="mt-3 line-clamp-2 text-sm text-forest-800/75">{job.description}</p>
       <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-forest-700/70">
         <span className="inline-flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5" /> {job.location}
+          <MapPin className="h-3.5 w-3.5" /> {job.zone && job.zone !== "Centro" ? `${job.zone}, Posadas` : job.location}
         </span>
         <span className="inline-flex items-center gap-1">
           <Briefcase className="h-3.5 w-3.5" /> {JOB_TYPES[job.type] || job.type}

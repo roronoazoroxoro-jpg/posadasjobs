@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useSession } from "@/components/session";
 import { api, formatSalary, JOB_TYPES, MODALITIES, timeAgo } from "@/lib/format";
 import { Badge, Button, Empty, Field, Input, PageTitle, Select, Textarea } from "@/components/ui";
+import { ZONES } from "@/lib/zones";
 
 type Job = {
   id: string;
@@ -20,6 +21,8 @@ type Job = {
   status: string;
   createdAt: string;
   applicationsCount?: number;
+  views?: number;
+  zone?: string;
 };
 
 const emptyForm = {
@@ -29,6 +32,7 @@ const emptyForm = {
   location: "Posadas, Misiones",
   type: "FULL_TIME",
   modality: "PRESENCIAL",
+  zone: "Centro",
   salaryMin: "",
   salaryMax: "",
   skills: "",
@@ -115,7 +119,7 @@ export default function MisEmpleosPage() {
           <Field label="Requisitos">
             <Textarea rows={3} value={form.requirements} onChange={(e) => setForm({ ...form, requirements: e.target.value })} />
           </Field>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Tipo">
               <Select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
                 {Object.entries(JOB_TYPES).map(([k, v]) => (
@@ -130,6 +134,15 @@ export default function MisEmpleosPage() {
                 {Object.entries(MODALITIES).map(([k, v]) => (
                   <option key={k} value={k}>
                     {v}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Zona (para el mapa)">
+              <Select value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })}>
+                {ZONES.map((z) => (
+                  <option key={z.name} value={z.name}>
+                    {z.name}
                   </option>
                 ))}
               </Select>
@@ -172,7 +185,8 @@ export default function MisEmpleosPage() {
                     {job.title}
                   </Link>
                   <p className="mt-1 text-xs text-forest-600">
-                    {timeAgo(job.createdAt)} · {formatSalary(job.salaryMin, job.salaryMax)} · {job.applicationsCount ?? 0} postulaciones
+                    {timeAgo(job.createdAt)} · {formatSalary(job.salaryMin, job.salaryMax)} · {job.views ?? 0} vistas · {job.applicationsCount ?? 0} postulaciones
+                    {job.zone ? ` · ${job.zone}` : ""}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <Badge tone={job.status === "OPEN" ? "green" : "slate"}>{job.status === "OPEN" ? "Abierto" : "Cerrado"}</Badge>

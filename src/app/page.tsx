@@ -1,8 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { Metadata } from "next";
 import {
   ArrowRight,
   BadgeCheck,
+  BarChart3,
+  MessageCircle,
   Building2,
   FileText,
   Handshake,
@@ -21,6 +24,8 @@ import { Reveal } from "@/components/Reveal";
 import { CountUp } from "@/components/CountUp";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 const TECH = [
   "React",
@@ -63,12 +68,12 @@ const STEPS = [
 ];
 
 const FEATURES = [
-  { icon: FileText, title: "CV visible y descargable", text: "PDF embebido, vista previa y descarga directa para reclutadores." },
-  { icon: Zap, title: "Postulación instantánea", text: "Un clic, carta de presentación opcional y seguimiento en tiempo real." },
-  { icon: Search, title: "Búsqueda inteligente", text: "Filtrá empleos por modalidad y tipo, y talentos por skill o proyecto." },
-  { icon: ShieldCheck, title: "Acceso seguro con email", text: "Sesiones firmadas, claves cifradas y protección contra intentos repetidos." },
-  { icon: Building2, title: "Panel para empresas", text: "Publicá, cerrá o reabrí puestos y gestioná candidatos por estado." },
-  { icon: MapPin, title: "Hecho para el NEA", text: "Talento y empresas de Posadas, Misiones y la región, en un solo lugar." },
+  { icon: Sparkles, title: "Match inteligente", text: "Cada empleo te muestra tu % de compatibilidad según tus skills, experiencia y proyectos." },
+  { icon: MessageCircle, title: "Mensajes directos", text: "Empresas y candidatos charlan dentro de la plataforma, con avisos de no leídos." },
+  { icon: MapPin, title: "Mapa de empleos", text: "Mirá en qué zona de Posadas está cada oportunidad, del Centro a Itaembé Miní." },
+  { icon: FileText, title: "CV en PDF y generador", text: "Subí tu PDF o generá un CV con diseño profesional en un clic, listo para descargar." },
+  { icon: BarChart3, title: "Estadísticas en vivo", text: "Visitas a tu perfil, aperturas de tu CV y rendimiento de cada empleo publicado." },
+  { icon: ShieldCheck, title: "Seguro y rápido", text: "Acceso con email, claves cifradas, sesiones firmadas y modo oscuro incluido." },
 ];
 
 async function getFeaturedJobs() {
@@ -80,6 +85,8 @@ async function getFeaturedJobs() {
   });
   return jobs.map((j) => ({
     ...j,
+    lat: j.lat ?? undefined,
+    lng: j.lng ?? undefined,
     skills: parseJsonArray(j.skills),
     createdAt: j.createdAt.toISOString(),
   }));
@@ -370,7 +377,7 @@ export default async function HomePage() {
       {/* FEATURES */}
       <section className="mx-auto mt-24 max-w-6xl">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <p className="text-sm font-bold uppercase tracking-widest text-forest-600">Por qué PosadasJobs</p>
+          <p className="text-sm font-bold uppercase tracking-widest text-forest-600">Por qué TucanJobs</p>
           <h2 className="mt-2 font-display text-3xl font-bold text-forest-950 sm:text-4xl">Todo lo que necesitás, sin vueltas</h2>
         </Reveal>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

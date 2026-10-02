@@ -1,10 +1,22 @@
 import { NextResponse } from "next/server";
+import { getSessionUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
+
+export async function POST(_request: Request, ctx: Ctx) {
+  const { id } = await ctx.params;
+  const viewer = await getSessionUser();
+  if (viewer?.candidate?.id !== id) {
+    await prisma.candidateProfile
+      .update({ where: { id }, data: { cvViews: { increment: 1 } } })
+      .catch(() => undefined);
+  }
+  return NextResponse.json({ ok: true });
+}
 
 function safeFileName(name: string) {
   const cleaned = name.replace(/[^\w.\- ]+/g, "").trim();

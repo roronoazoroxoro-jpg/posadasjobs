@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { getSessionUser, parseJsonArray, unauthorized, forbidden } from "@/lib/auth";
+import { getSessionUser, parseJsonArray, unauthorized, forbidden, toMatchCandidate } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { matchScore, type MatchCandidate } from "@/lib/match";
+import { zoneCoords } from "@/lib/zones";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function serializeJob(job: {
+type JobRow = {
   id: string;
   title: string;
   description: string;
@@ -17,10 +19,18 @@ function serializeJob(job: {
   salaryMax: number | null;
   skills: string;
   status: string;
+  zone: string;
+  lat: number | null;
+  lng: number | null;
+  views: number;
   createdAt: Date;
   company: { id: string; companyName: string; industry: string; location: string; description?: string };
   _count?: { applications: number };
-}) {
+};
+
+function serializeJob(job: JobRow, candidate?: MatchCandidate | null) {
+  const skills = parseJsonArray(job.skills);
+  const coords = job.lat != null && job.lng != null ? { lat: job.lat, lng: job.lng } : zoneCoords(job.zone);
   return {
     id: job.id,
     title: job.title,
@@ -31,11 +41,18 @@ function serializeJob(job: {
     modality: job.modality,
     salaryMin: job.salaryMin,
     salaryMax: job.salaryMax,
-    skills: parseJsonArray(job.skills),
+    skills,
     status: job.status,
+    zone: job.zone,
+    lat: coords.lat,
+    lng: coords.lng,
+    views: job.views,
     createdAt: job.createdAt.toISOString(),
     company: job.company,
     applicationsCount: job._count?.applications ?? undefined,
+    match: candidate
+      ? matchScore(candidate, { title: job.title, description: job.description, requirements: job.requirements, skills })
+      : undefined,
   };
 }
 
@@ -45,9 +62,11 @@ export async function GET(request: Request) {
   const modality = searchParams.get("modality") || "";
   const type = searchParams.get("type") || "";
   const mine = searchParams.get("mine") === "1";
+  const sort = searchParams.get("sort") || "";
+
+  const user = await getSessionUser();
 
   if (mine) {
-    const user = await getSessionUser();
     if (!user?.company) return unauthorized();
     const jobs = await prisma.job.findMany({
       where: { companyId: user.company.id },
@@ -57,7 +76,7 @@ export async function GET(request: Request) {
       },
       orderBy: { createdAt: "desc" },
     });
-    return NextResponse.json({ jobs: jobs.map(serializeJob) });
+    return NextResponse.json({ jobs: jobs.map((j) => serializeJob(j)) });
   }
 
   const jobs = await prisma.job.findMany({
@@ -71,6 +90,7 @@ export async function GET(request: Request) {
               { title: { contains: q } },
               { description: { contains: q } },
               { skills: { contains: q } },
+              { zone: { contains: q } },
               { company: { companyName: { contains: q } } },
             ],
           }
@@ -82,7 +102,13 @@ export async function GET(request: Request) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json({ jobs: jobs.map(serializeJob) });
+  const candidate = user?.candidate ? toMatchCandidate(user.candidate) : null;
+  const result = jobs.map((j) => serializeJob(j, candidate));
+  if (sort === "match" && candidate) {
+    result.sort((a, b) => (b.match?.score ?? 0) - (a.match?.score ?? 0));
+  }
+
+  return NextResponse.json({ jobs: result, personalized: Boolean(candidate) });
 }
 
 export async function POST(request: Request) {
@@ -109,18 +135,23 @@ export async function POST(request: Request) {
         .map((s) => s.trim())
         .filter(Boolean);
 
+  const zone = zoneCoords(typeof body.zone === "string" ? body.zone : "Centro");
+
   const job = await prisma.job.create({
     data: {
       companyId: user.company.id,
-      title,
-      description,
-      requirements: String(body.requirements || ""),
+      title: title.slice(0, 140),
+      description: description.slice(0, 5000),
+      requirements: String(body.requirements || "").slice(0, 3000),
       location: String(body.location || user.company.location || "Posadas, Misiones"),
       type: String(body.type || "FULL_TIME"),
       modality: String(body.modality || "PRESENCIAL"),
       salaryMin: body.salaryMin ? Number(body.salaryMin) : null,
       salaryMax: body.salaryMax ? Number(body.salaryMax) : null,
-      skills: JSON.stringify(skills),
+      skills: JSON.stringify(skills.slice(0, 20)),
+      zone: zone.name,
+      lat: zone.lat,
+      lng: zone.lng,
       status: "OPEN",
     },
     include: {

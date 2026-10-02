@@ -4,10 +4,21 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { Download, ExternalLink, Github, Mail, Phone, Sparkles } from "lucide-react";
+import { Download, Eye, ExternalLink, FileText, Github, Mail, Phone, Share2, Sparkles } from "lucide-react";
 import { api } from "@/lib/format";
 import { Badge, Button } from "@/components/ui";
 import { CvViewer } from "@/components/CvViewer";
+import { MessageComposer } from "@/components/MessageComposer";
+import { ShareButtons } from "@/components/ShareButtons";
+import { useSession } from "@/components/session";
+
+function githubProfile(projects: Project[]) {
+  for (const p of projects) {
+    const m = p.url?.match(/^https?:\/\/github\.com\/([A-Za-z0-9-]+)/);
+    if (m) return `https://github.com/${m[1]}`;
+  }
+  return null;
+}
 
 type Project = { name: string; description: string; url?: string };
 
@@ -33,25 +44,41 @@ type Candidate = {
   cvFileUrl: string;
   cvFileName: string;
   cvPreviews: string[];
+  views: number;
 };
 
 export default function TalentoDetailPage() {
   const params = useParams<{ id: string }>();
+  const { user, loading: sessionLoading } = useSession();
   const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [tab, setTab] = useState<"perfil" | "proyectos" | "cv">("perfil");
 
   useEffect(() => {
-    api<{ candidate: Candidate }>(`/api/candidates/${params.id}`)
-      .then((d) => setCandidate(d.candidate))
+    if (sessionLoading) return;
+    api<{ candidate: Candidate; conversationId: string | null }>(`/api/candidates/${params.id}`)
+      .then((d) => {
+        setCandidate(d.candidate);
+        setConversationId(d.conversationId);
+      })
       .catch((e) => setError(e instanceof Error ? e.message : "Error"));
-  }, [params.id]);
+  }, [params.id, sessionLoading]);
 
   if (error) return <p className="text-red-600">{error}</p>;
-  if (!candidate) return <p className="text-forest-700/70">Cargando perfil…</p>;
+  if (!candidate) {
+    return (
+      <div className="space-y-6">
+        <div className="h-60 animate-pulse rounded-[1.75rem] bg-white/70" />
+        <div className="h-80 animate-pulse rounded-3xl bg-white/70" />
+      </div>
+    );
+  }
 
   const wa = candidate.phone.replace(/\D/g, "");
   const waLink = wa ? `https://wa.me/${wa.startsWith("54") ? wa : `54${wa}`}` : null;
+  const github = githubProfile(candidate.projects);
+  const isCompany = user?.role === "COMPANY";
 
   return (
     <div>
@@ -74,13 +101,24 @@ export default function TalentoDetailPage() {
             ) : null}
             <h1 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">{candidate.name}</h1>
             <p className="mt-2 text-lg text-forest-50/95">{candidate.headline}</p>
-            <p className="mt-2 text-sm text-white/75">
+            <p className="mt-2 flex flex-wrap items-center justify-center gap-x-2 text-sm text-white/75 sm:justify-start">
               {candidate.location} · {candidate.availability}
+              <span className="inline-flex items-center gap-1">
+                · <Eye className="h-3.5 w-3.5" /> {candidate.views} visitas
+              </span>
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-2 sm:justify-start">
+              {isCompany ? (
+                <MessageComposer
+                  candidateId={candidate.id}
+                  conversationId={conversationId}
+                  placeholder={`Hola ${candidate.name.split(" ")[0]}, vimos tu perfil en TucanJobs y nos gustaría charlar…`}
+                  className="w-full max-w-md sm:w-auto"
+                />
+              ) : null}
               <a href={`mailto:${candidate.email}`}>
                 <Button type="button" className="bg-white text-forest-800 hover:bg-forest-50">
-                  <Mail className="h-4 w-4" /> Contactar
+                  <Mail className="h-4 w-4" /> Email
                 </Button>
               </a>
               {waLink ? (
@@ -102,6 +140,11 @@ export default function TalentoDetailPage() {
                   <Download className="h-4 w-4" /> Ver / descargar CV
                 </Button>
               ) : null}
+              <Link href={`/talentos/${candidate.id}/cv`}>
+                <Button type="button" variant="secondary">
+                  <FileText className="h-4 w-4" /> CV diseñado
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
@@ -174,14 +217,17 @@ export default function TalentoDetailPage() {
                   <ExternalLink className="h-3.5 w-3.5" /> Portfolio web
                 </a>
               ) : null}
-              <a
-                className="mt-1 flex items-center gap-1 text-river-700 hover:underline"
-                href="https://github.com/roronoazoroxoro-jpg"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <Github className="h-3.5 w-3.5" /> GitHub
-              </a>
+              {github ? (
+                <a className="mt-1 flex items-center gap-1 text-river-700 hover:underline" href={github} target="_blank" rel="noreferrer">
+                  <Github className="h-3.5 w-3.5" /> GitHub
+                </a>
+              ) : null}
+            </div>
+            <div className="rounded-3xl border border-forest-100 bg-white/90 p-6 shadow-soft">
+              <h2 className="mb-3 flex items-center gap-1.5 font-display text-lg font-bold">
+                <Share2 className="h-4 w-4 text-river-600" /> Compartir perfil
+              </h2>
+              <ShareButtons title={`${candidate.name} — ${candidate.headline}`} path={`/talentos/${candidate.id}`} />
             </div>
           </aside>
         </div>
@@ -207,6 +253,7 @@ export default function TalentoDetailPage() {
       {tab === "cv" ? (
         <div>
           <CvViewer
+            candidateId={candidate.id}
             name={candidate.name}
             cvText={candidate.cvText}
             cvFileUrl={candidate.cvFileUrl}

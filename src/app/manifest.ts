@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "PosadasJobs",
-    short_name: "PosadasJobs",
+    name: "TucanJobs",
+    short_name: "TucanJobs",
     description: "Trabajo y talento en Posadas, Misiones",
     start_url: "/",
     display: "standalone",

@@ -93,7 +93,7 @@ export default function PerfilPage() {
     <div>
       <PageTitle
         title={user.role === "COMPANY" ? "Perfil de empresa" : "Mi perfil técnico"}
-        subtitle="Esta información es visible para la comunidad de PosadasJobs."
+        subtitle="Esta información es visible para la comunidad de TucanJobs."
       />
       <form onSubmit={onSubmit} className="max-w-2xl space-y-4 rounded-3xl border border-forest-100 bg-white/90 p-6 shadow-soft">
         <Field label="Nombre">

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { forbidden, getSessionUser, parseJsonArray, unauthorized } from "@/lib/auth";
+import { forbidden, getSessionUser, parseJsonArray, toMatchCandidate, unauthorized } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { matchScore } from "@/lib/match";
+import { notify } from "@/lib/notify";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +48,7 @@ export async function GET(request: Request) {
         ...(jobId ? { jobId } : {}),
       },
       include: {
-        job: { select: { id: true, title: true } },
+        job: { select: { id: true, title: true, description: true, requirements: true, skills: true } },
         candidate: {
           include: { user: { select: { name: true, email: true } } },
         },
@@ -60,7 +62,13 @@ export async function GET(request: Request) {
         status: a.status,
         coverLetter: a.coverLetter,
         createdAt: a.createdAt.toISOString(),
-        job: a.job,
+        job: { id: a.job.id, title: a.job.title },
+        match: matchScore(toMatchCandidate(a.candidate), {
+          title: a.job.title,
+          description: a.job.description,
+          requirements: a.job.requirements,
+          skills: parseJsonArray(a.job.skills),
+        }),
         candidate: {
           id: a.candidate.id,
           name: a.candidate.user.name,
@@ -106,7 +114,28 @@ export async function PATCH(request: Request) {
   const updated = await prisma.application.update({
     where: { id: body.id },
     data: { status: body.status },
+    include: {
+      job: { select: { title: true } },
+      candidate: { select: { userId: true } },
+    },
   });
+
+  if (updated.status !== app.status) {
+    await notify(
+      updated.candidate.userId,
+      `Tu postulación: ${APP_LABEL[updated.status] || updated.status}`,
+      `El estado de "${updated.job.title}" pasó a ${APP_LABEL[updated.status] || updated.status}.`,
+      "/panel/postulaciones",
+      "status",
+    );
+  }
 
   return NextResponse.json({ application: updated });
 }
+
+const APP_LABEL: Record<string, string> = {
+  PENDING: "Pendiente",
+  REVIEWING: "En revisión",
+  ACCEPTED: "Aceptada",
+  REJECTED: "No seleccionada",
+};

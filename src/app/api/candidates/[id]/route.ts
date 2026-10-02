@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parseJsonArray, parseProjects } from "@/lib/auth";
+import { getSessionUser, parseJsonArray, parseProjects } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -14,7 +14,25 @@ export async function GET(_request: Request, ctx: Ctx) {
   });
   if (!candidate) return NextResponse.json({ error: "Talento no encontrado" }, { status: 404 });
 
+  const viewer = await getSessionUser();
+  const isSelf = viewer?.candidate?.id === candidate.id;
+  if (!isSelf) {
+    await prisma.candidateProfile
+      .update({ where: { id }, data: { views: { increment: 1 } } })
+      .catch(() => undefined);
+  }
+
+  let conversationId: string | null = null;
+  if (viewer?.company) {
+    const conv = await prisma.conversation.findUnique({
+      where: { companyId_candidateId: { companyId: viewer.company.id, candidateId: candidate.id } },
+      select: { id: true },
+    });
+    conversationId = conv?.id ?? null;
+  }
+
   return NextResponse.json({
+    conversationId,
     candidate: {
       id: candidate.id,
       name: candidate.user.name,
@@ -37,6 +55,7 @@ export async function GET(_request: Request, ctx: Ctx) {
       cvFileUrl: candidate.cvFileUrl,
       cvFileName: candidate.cvFileName,
       cvPreviews: parseJsonArray(candidate.cvPreviews),
+      views: candidate.views + (isSelf ? 0 : 1),
     },
   });
 }

@@ -1,4 +1,4 @@
-# PosadasJobs
+# TucanJobs
 
 Plataforma web de empleo para Posadas (Misiones): candidatos publican perfil técnico y CV; empresas publican puestos y contactan talento.
 
@@ -24,8 +24,8 @@ Plataforma web de empleo para Posadas (Misiones): candidatos publican perfil té
 | Rol | Email | Clave |
 |-----|-------|-------|
 | Valentín (destacado) | valentinprogramer234@gmail.com | Posadas2026! |
-| Empresa | empresa@posadasjobs.com | Posadas2026! |
-| Candidato demo | candidato@posadasjobs.com | Posadas2026! |
+| Empresa | empresa@tucanjobs.com | Posadas2026! |
+| Candidato demo | candidato@tucanjobs.com | Posadas2026! |
 
 ## Desarrollo local
 

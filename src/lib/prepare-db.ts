@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { dirname, join } from "path";
 
 /** Bump this when seed data changes so Vercel /tmp refreshes. */
-export const SEED_VERSION = "2026-10-02-cv-pdf-v3";
+export const SEED_VERSION = "2026-10-02-tucanjobs-v6";
 
 /**
  * En Vercel el filesystem es efímero salvo /tmp.
@@ -12,13 +12,13 @@ export function prepareProductionDatabase() {
   const onVercel = process.env.VERCEL === "1";
 
   if (onVercel) {
-    process.env.DATABASE_URL = "file:/tmp/posadasjobs.db";
+    process.env.DATABASE_URL = "file:/tmp/tucanjobs.db";
   }
 
   if (!onVercel) return;
 
-  const target = "/tmp/posadasjobs.db";
-  const versionFile = "/tmp/posadasjobs.seed.version";
+  const target = "/tmp/tucanjobs.db";
+  const versionFile = "/tmp/tucanjobs.seed.version";
   const seedDb = join(process.cwd(), "prisma", "prod-seed.db");
 
   if (!existsSync(seedDb)) {

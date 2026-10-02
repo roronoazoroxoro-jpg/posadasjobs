@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSession } from "@/components/session";
 import { api, APP_STATUS, timeAgo } from "@/lib/format";
-import { Badge, Button, Empty, PageTitle, Select } from "@/components/ui";
+import { Badge, Empty, PageTitle, Select } from "@/components/ui";
+import { MatchBadge, type MatchInfo } from "@/components/Match";
+import { MessageComposer } from "@/components/MessageComposer";
 
 type CandidateApp = {
   id: string;
@@ -20,6 +22,7 @@ type CompanyApp = {
   coverLetter: string;
   createdAt: string;
   job: { id: string; title: string };
+  match: MatchInfo;
   candidate: {
     id: string;
     name: string;
@@ -40,6 +43,8 @@ export default function PostulacionesPage() {
   const [candidateApps, setCandidateApps] = useState<CandidateApp[]>([]);
   const [companyApps, setCompanyApps] = useState<CompanyApp[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortByMatch, setSortByMatch] = useState(false);
+  const visibleCompanyApps = sortByMatch ? [...companyApps].sort((a, b) => b.match.score - a.match.score) : companyApps;
 
   async function load() {
     setLoading(true);
@@ -108,14 +113,25 @@ export default function PostulacionesPage() {
         <Empty title="Todavía no hay postulaciones" />
       ) : (
         <div className="space-y-4">
-          {companyApps.map((a) => (
-            <div key={a.id} className="rounded-2xl border border-forest-100 bg-white/90 p-5 shadow-soft">
+          <label className="flex w-fit cursor-pointer items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-semibold text-forest-800 ring-1 ring-forest-100">
+            <input type="checkbox" checked={sortByMatch} onChange={(e) => setSortByMatch(e.target.checked)} className="accent-forest-600" />
+            Ordenar por mejor match
+          </label>
+          {visibleCompanyApps.map((a, i) => (
+            <div
+              key={a.id}
+              className="animate-fade-up rounded-2xl border border-forest-100 bg-white/90 p-5 shadow-soft"
+              style={{ animationDelay: `${Math.min(i, 8) * 50}ms` }}
+            >
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-river-600">{a.job.title}</p>
-                  <Link href={`/talentos/${a.candidate.id}`} className="font-display text-lg font-bold text-forest-950 hover:text-river-700">
-                    {a.candidate.name}
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Link href={`/talentos/${a.candidate.id}`} className="font-display text-lg font-bold text-forest-950 hover:text-river-700">
+                      {a.candidate.name}
+                    </Link>
+                    <MatchBadge match={a.match} />
+                  </div>
                   <p className="text-sm text-forest-700/80">{a.candidate.headline || a.candidate.email}</p>
                   <p className="mt-1 text-xs text-forest-600">
                     {a.candidate.location} · {a.candidate.email}
@@ -148,7 +164,7 @@ export default function PostulacionesPage() {
                     </details>
                   ) : null}
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex w-full flex-col gap-2 sm:w-56">
                   <Badge tone={statusTone(a.status)}>{APP_STATUS[a.status] || a.status}</Badge>
                   <Select value={a.status} onChange={(e) => void updateStatus(a.id, e.target.value)}>
                     {Object.entries(APP_STATUS).map(([k, v]) => (
@@ -157,10 +173,15 @@ export default function PostulacionesPage() {
                       </option>
                     ))}
                   </Select>
-                  <a href={`mailto:${a.candidate.email}`}>
-                    <Button type="button" variant="secondary" className="w-full">
-                      Contactar
-                    </Button>
+                  <MessageComposer
+                    candidateId={a.candidate.id}
+                    jobTitle={a.job.title}
+                    label="Escribir mensaje"
+                    placeholder={`Hola ${a.candidate.name.split(" ")[0]}, gracias por postularte a ${a.job.title}…`}
+                    buttonClassName="w-full"
+                  />
+                  <a href={`mailto:${a.candidate.email}`} className="text-center text-xs font-semibold text-river-700 hover:underline">
+                    o escribir por email
                   </a>
                 </div>
               </div>

@@ -36,7 +36,7 @@ export default function EmpresaDetailPage() {
     <div>
       <PageTitle
         title={company.companyName}
-        subtitle={company.description || "Empresa en PosadasJobs"}
+        subtitle={company.description || "Empresa en TucanJobs"}
       />
       <div className="mb-8 flex flex-wrap gap-2">
         {company.industry ? <Badge tone="blue">{company.industry}</Badge> : null}

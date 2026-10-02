@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { publicUser, sessionCookie, signSession } from "@/lib/auth";
+import { issueToken, notify } from "@/lib/notify";
+import { SITE_URL } from "@/lib/site";
 
 export const runtime = "nodejs";
 
@@ -54,8 +56,27 @@ export async function POST(request: Request) {
     include: { candidate: true, company: true },
   });
 
+  const verify = await issueToken(user.id, "VERIFY_EMAIL", 48);
+  await notify(
+    user.id,
+    "Bienvenido a TucanJobs",
+    `Hola ${name.split(" ")[0]}, tu cuenta quedó lista. Verificá tu email para completar el perfil.`,
+    `/verificar?token=${verify}`,
+    "welcome",
+  );
+  await notify(
+    user.id,
+    "Verificá tu correo",
+    `Tocá el enlace para confirmar ${email}. En esta demo el aviso llega a tu bandeja de TucanJobs.`,
+    `/verificar?token=${verify}`,
+    "email",
+  );
+
   const cookie = sessionCookie(signSession(user.id));
-  const response = NextResponse.json({ user: publicUser(user) });
+  const response = NextResponse.json({
+    user: publicUser(user),
+    verifyUrl: `${SITE_URL}/verificar?token=${verify}`,
+  });
   response.cookies.set(cookie.name, cookie.value, cookie.options);
   return response;
 }

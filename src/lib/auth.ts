@@ -2,8 +2,9 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "./db";
+import type { MatchCandidate } from "./match";
 
-export const SESSION_COOKIE = "posadasjobs_session";
+export const SESSION_COOKIE = "tucanjobs_session";
 const SESSION_DAYS = 14;
 
 function secret() {
@@ -11,7 +12,7 @@ function secret() {
   if (!value && process.env.NODE_ENV === "production" && process.env.VERCEL !== "1") {
     throw new Error("Falta AUTH_SECRET en el archivo .env");
   }
-  return value || "posadasjobs-vercel-demo-secret-change-me";
+  return value || "tucanjobs-vercel-demo-secret-change-me";
 }
 
 function sign(body: string) {
@@ -72,6 +73,7 @@ export function publicUser(user: SessionUser) {
     name: user.name,
     email: user.email,
     role: user.role,
+    emailVerified: Boolean(user.emailVerified),
     candidate: user.candidate
       ? {
           id: user.candidate.id,
@@ -107,6 +109,17 @@ export function publicUser(user: SessionUser) {
           size: user.company.size,
         }
       : null,
+  };
+}
+
+export function toMatchCandidate(c: NonNullable<SessionUser["candidate"]>): MatchCandidate {
+  return {
+    skills: parseJsonArray(c.skills),
+    headline: c.headline,
+    bio: c.bio,
+    experience: c.experience,
+    cvText: c.cvText,
+    projects: parseProjects(c.projects),
   };
 }
 
