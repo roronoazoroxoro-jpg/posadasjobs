@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { parseJsonArray } from "@/lib/auth";
+import { parseJsonArray, parseProjects } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -30,6 +30,10 @@ export async function GET(_request: Request, ctx: Ctx) {
       linkedin: candidate.linkedin,
       portfolio: candidate.portfolio,
       availability: candidate.availability,
+      photoUrl: candidate.photoUrl,
+      projects: parseProjects(candidate.projects),
+      languages: parseJsonArray(candidate.languages),
+      featured: candidate.featured,
     },
   });
 }

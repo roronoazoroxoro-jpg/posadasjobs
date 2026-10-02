@@ -23,8 +23,9 @@ Plataforma web de empleo para Posadas (Misiones): candidatos publican perfil té
 
 | Rol | Email | Clave |
 |-----|-------|-------|
-| Candidato | candidato@posadasjobs.com | Posadas2026! |
+| Valentín (destacado) | valentinprogramer234@gmail.com | Posadas2026! |
 | Empresa | empresa@posadasjobs.com | Posadas2026! |
+| Candidato demo | candidato@posadasjobs.com | Posadas2026! |
 
 ## Desarrollo local
 

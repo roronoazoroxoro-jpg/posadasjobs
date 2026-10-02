@@ -1,9 +1,10 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Building2, Search, UserRound } from "lucide-react";
+import { ArrowRight, Building2, Search, Sparkles, UserRound } from "lucide-react";
 import { prisma } from "@/lib/db";
-import { parseJsonArray } from "@/lib/auth";
+import { parseJsonArray, parseProjects } from "@/lib/auth";
 import { JobCard } from "@/components/JobCard";
+import { TalentCard } from "@/components/TalentCard";
 
 export const dynamic = "force-dynamic";
 
@@ -21,18 +22,51 @@ async function getFeaturedJobs() {
   }));
 }
 
+async function getFeaturedTalents() {
+  const talents = await prisma.candidateProfile.findMany({
+    where: { featured: true },
+    include: { user: { select: { name: true } } },
+    take: 2,
+  });
+  return talents.map((c) => ({
+    id: c.id,
+    name: c.user.name,
+    headline: c.headline,
+    bio: c.bio,
+    skills: parseJsonArray(c.skills),
+    location: c.location,
+    availability: c.availability,
+    photoUrl: c.photoUrl,
+    featured: c.featured,
+    projects: parseProjects(c.projects),
+  }));
+}
+
 export default async function HomePage() {
-  const jobs = await getFeaturedJobs();
-  const [jobCount, companyCount, talentCount] = await Promise.all([
+  const [jobs, talents, jobCount, companyCount, talentCount, projectCount] = await Promise.all([
+    getFeaturedJobs(),
+    getFeaturedTalents(),
     prisma.job.count({ where: { status: "OPEN" } }),
     prisma.companyProfile.count(),
     prisma.candidateProfile.count(),
+    prisma.candidateProfile.findMany({ select: { projects: true } }).then((rows) =>
+      rows.reduce((acc, r) => {
+        try {
+          const p = JSON.parse(r.projects);
+          return acc + (Array.isArray(p) ? p.length : 0);
+        } catch {
+          return acc;
+        }
+      }, 0),
+    ),
   ]);
+
+  const star = talents[0];
 
   return (
     <div className="-mt-8">
       <section className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen overflow-hidden mesh">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:py-20">
           <div className="animate-fade-up">
             <p className="font-display text-4xl font-bold tracking-tight text-forest-950 sm:text-5xl lg:text-6xl">
               Posadas<span className="text-river-600">Jobs</span>
@@ -41,7 +75,7 @@ export default async function HomePage() {
               Donde el talento del NEA encuentra su próximo mate… y su próximo laburo.
             </h1>
             <p className="mt-4 max-w-lg text-forest-800/75">
-              Publicá tu perfil técnico o tu empresa. Postulate, contactá y construí equipo desde Posadas.
+              Publicá tu perfil técnico, cargá tu CV y proyectos, o publicá puestos. Hecho en Posadas, para Posadas.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -56,6 +90,14 @@ export default async function HomePage() {
               >
                 Soy empresa
               </Link>
+              {star ? (
+                <Link
+                  href={`/talentos/${star.id}`}
+                  className="inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold text-river-700 hover:underline"
+                >
+                  <Sparkles className="h-4 w-4" /> Ver talento destacado
+                </Link>
+              ) : null}
             </div>
           </div>
           <div className="relative animate-fade-up [animation-delay:120ms]">
@@ -72,11 +114,12 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-3">
+      <section className="mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { icon: Search, label: "Empleos abiertos", value: jobCount },
           { icon: Building2, label: "Empresas", value: companyCount },
           { icon: UserRound, label: "Talentos", value: talentCount },
+          { icon: Sparkles, label: "Proyectos publicados", value: projectCount },
         ].map((item) => (
           <div key={item.label} className="rounded-2xl border border-forest-100 bg-white/80 px-5 py-4 shadow-soft">
             <item.icon className="h-5 w-5 text-river-600" />
@@ -85,6 +128,25 @@ export default async function HomePage() {
           </div>
         ))}
       </section>
+
+      {talents.length ? (
+        <section className="mx-auto mt-16 max-w-6xl">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-2xl font-bold text-forest-950">Talento destacado</h2>
+              <p className="text-sm text-forest-700/75">Perfiles con CV, skills y proyectos listos para contactar.</p>
+            </div>
+            <Link href="/talentos" className="text-sm font-semibold text-river-700 hover:underline">
+              Ver todos
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {talents.map((t) => (
+              <TalentCard key={t.id} talent={t} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="mx-auto mt-16 max-w-6xl">
         <div className="mb-6 flex items-end justify-between gap-4">
@@ -106,7 +168,7 @@ export default async function HomePage() {
       <section className="mx-auto mt-16 grid max-w-6xl gap-6 md:grid-cols-2">
         <div className="rounded-[1.5rem] bg-gradient-to-br from-forest-700 to-forest-900 p-8 text-white shadow-soft">
           <h3 className="font-display text-2xl font-bold">Para candidatos</h3>
-          <p className="mt-2 text-forest-100/90">Armá tu perfil técnico, cargá tu CV y dejá que las empresas te encuentren.</p>
+          <p className="mt-2 text-forest-100/90">Armá tu perfil técnico, cargá tu CV y proyectos, y dejá que las empresas te encuentren.</p>
           <Link href="/registro?rol=CANDIDATE" className="mt-6 inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-forest-800">
             Crear perfil
           </Link>

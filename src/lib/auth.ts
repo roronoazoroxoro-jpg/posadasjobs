@@ -86,6 +86,10 @@ export function publicUser(user: SessionUser) {
           linkedin: user.candidate.linkedin,
           portfolio: user.candidate.portfolio,
           availability: user.candidate.availability,
+          photoUrl: user.candidate.photoUrl,
+          projects: parseProjects(user.candidate.projects),
+          languages: parseJsonArray(user.candidate.languages),
+          featured: user.candidate.featured,
         }
       : null,
     company: user.company
@@ -101,6 +105,23 @@ export function publicUser(user: SessionUser) {
         }
       : null,
   };
+}
+
+export type ProjectItem = { name: string; description: string; url?: string };
+
+export function parseProjects(value: string | null | undefined): ProjectItem[] {
+  if (!value) return [];
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((p) => ({
+      name: String(p?.name || ""),
+      description: String(p?.description || ""),
+      url: p?.url ? String(p.url) : "",
+    })).filter((p) => p.name);
+  } catch {
+    return [];
+  }
 }
 
 export function parseJsonArray(value: string | null | undefined): string[] {

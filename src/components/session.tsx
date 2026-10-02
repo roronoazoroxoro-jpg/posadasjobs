@@ -24,6 +24,10 @@ type PublicUser = {
     linkedin: string;
     portfolio: string;
     availability: string;
+    photoUrl?: string;
+    projects?: { name: string; description: string; url?: string }[];
+    languages?: string[];
+    featured?: boolean;
   } | null;
   company: {
     id: string;

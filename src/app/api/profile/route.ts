@@ -31,6 +31,24 @@ export async function PUT(request: Request) {
         ? body.skills.split(",").map((s) => s.trim()).filter(Boolean)
         : undefined;
 
+    const languages = Array.isArray(body.languages)
+      ? body.languages.map(String)
+      : typeof body.languages === "string"
+        ? body.languages.split(",").map((s) => s.trim()).filter(Boolean)
+        : undefined;
+
+    const projects = Array.isArray(body.projects)
+      ? body.projects
+      : typeof body.projects === "string"
+        ? (() => {
+            try {
+              return JSON.parse(body.projects as string);
+            } catch {
+              return undefined;
+            }
+          })()
+        : undefined;
+
     await prisma.candidateProfile.update({
       where: { id: user.candidate.id },
       data: {
@@ -44,7 +62,10 @@ export async function PUT(request: Request) {
         linkedin: str(body.linkedin, user.candidate.linkedin),
         portfolio: str(body.portfolio, user.candidate.portfolio),
         availability: str(body.availability, user.candidate.availability),
+        photoUrl: str(body.photoUrl, user.candidate.photoUrl),
         ...(skills ? { skills: JSON.stringify(skills) } : {}),
+        ...(languages ? { languages: JSON.stringify(languages) } : {}),
+        ...(projects ? { projects: JSON.stringify(projects) } : {}),
       },
     });
   } else if (user.role === "COMPANY" && user.company) {

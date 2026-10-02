@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Briefcase, FileText, Users } from "lucide-react";
+import { Briefcase, ExternalLink, FileText, Users } from "lucide-react";
 import { useSession } from "@/components/session";
 import { api } from "@/lib/format";
-import { PageTitle } from "@/components/ui";
+import { Button, PageTitle } from "@/components/ui";
 
 export default function PanelHomePage() {
   const { user } = useSession();
@@ -34,7 +34,16 @@ export default function PanelHomePage() {
         subtitle={
           user.role === "COMPANY"
             ? "Gestioná tu empresa, empleos y postulantes."
-            : "Completá tu perfil técnico y postulá a empleos."
+            : "Tu perfil técnico, CV y proyectos ya pueden ser vistos por empresas."
+        }
+        action={
+          user.role === "CANDIDATE" && user.candidate ? (
+            <Link href={`/talentos/${user.candidate.id}`}>
+              <Button type="button" variant="secondary">
+                <ExternalLink className="h-4 w-4" /> Ver perfil público
+              </Button>
+            </Link>
+          ) : null
         }
       />
       <div className="grid gap-4 sm:grid-cols-3">
@@ -52,27 +61,38 @@ export default function PanelHomePage() {
           </>
         )}
       </div>
-      <div className="mt-8 rounded-3xl border border-dashed border-forest-200 bg-white/60 p-6 text-sm text-forest-800/80">
-        {user.role === "CANDIDATE" && !user.candidate?.headline ? (
-          <p>
-            Tu perfil está incompleto.{" "}
-            <Link href="/panel/perfil" className="font-semibold text-river-700 hover:underline">
-              Completá tu headline y skills
-            </Link>{" "}
-            para que las empresas te encuentren.
+      {user.role === "CANDIDATE" && user.candidate ? (
+        <div className="mt-8 rounded-3xl border border-forest-100 bg-white/80 p-6 shadow-soft">
+          <p className="font-display text-lg font-bold text-forest-950">Tu vitrina</p>
+          <p className="mt-1 text-sm text-forest-700/80">
+            {user.candidate.skills?.length || 0} skills · {user.candidate.projects?.length || 0} proyectos ·{" "}
+            {user.candidate.cvText ? "CV cargado" : "CV pendiente"}
           </p>
-        ) : user.role === "COMPANY" && !user.company?.description ? (
-          <p>
-            Contá más sobre tu empresa en{" "}
-            <Link href="/panel/perfil" className="font-semibold text-river-700 hover:underline">
-              Perfil empresa
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Link href="/panel/perfil" className="text-sm font-semibold text-river-700 hover:underline">
+              Editar perfil
             </Link>
-            .
-          </p>
-        ) : (
-          <p>Todo listo. Seguí actualizando tu información para mejores resultados.</p>
-        )}
-      </div>
+            <span className="text-forest-300">·</span>
+            <Link href="/panel/cv" className="text-sm font-semibold text-river-700 hover:underline">
+              Actualizar CV
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="mt-8 rounded-3xl border border-dashed border-forest-200 bg-white/60 p-6 text-sm text-forest-800/80">
+          {user.role === "COMPANY" && !user.company?.description ? (
+            <p>
+              Contá más sobre tu empresa en{" "}
+              <Link href="/panel/perfil" className="font-semibold text-river-700 hover:underline">
+                Perfil empresa
+              </Link>
+              .
+            </p>
+          ) : (
+            <p>Todo listo. Seguí actualizando tu información para mejores resultados.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

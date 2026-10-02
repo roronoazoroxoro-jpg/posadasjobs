@@ -61,7 +61,7 @@ function LoginForm() {
         </p>
         <div className="mt-6 rounded-xl bg-forest-50 p-3 text-xs text-forest-800/80">
           <p className="font-semibold">Demo</p>
-          <p>candidato@posadasjobs.com / Posadas2026!</p>
+          <p>valentinprogramer234@gmail.com / Posadas2026!</p>
           <p>empresa@posadasjobs.com / Posadas2026!</p>
         </div>
       </div>
