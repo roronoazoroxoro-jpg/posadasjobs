@@ -7,17 +7,20 @@ import { dirname, join } from "path";
  */
 export function prepareProductionDatabase() {
   const onVercel = process.env.VERCEL === "1";
-  if (onVercel && !process.env.DATABASE_URL) {
+
+  if (onVercel) {
     process.env.DATABASE_URL = "file:/tmp/posadasjobs.db";
   }
 
-  if (!onVercel && process.env.NODE_ENV !== "production") return;
+  if (!onVercel) return;
 
-  const target = (process.env.DATABASE_URL || "file:/tmp/posadasjobs.db").replace(/^file:/, "");
+  const target = "/tmp/posadasjobs.db";
   if (existsSync(target)) return;
 
   const seedDb = join(process.cwd(), "prisma", "prod-seed.db");
-  if (!existsSync(seedDb)) return;
+  if (!existsSync(seedDb)) {
+    throw new Error("Falta prisma/prod-seed.db en el deploy");
+  }
 
   mkdirSync(dirname(target), { recursive: true });
   copyFileSync(seedDb, target);
