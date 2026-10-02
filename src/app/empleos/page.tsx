@@ -1,13 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/format";
 import { JobCard, type JobCardData } from "@/components/JobCard";
-import { Empty, Input, PageTitle, Select } from "@/components/ui";
+import { PageHero } from "@/components/PageHero";
+import { Empty, Input, Select } from "@/components/ui";
 
 export default function EmpleosPage() {
+  return (
+    <Suspense>
+      <EmpleosList />
+    </Suspense>
+  );
+}
+
+function EmpleosList() {
+  const params = useSearchParams();
   const [jobs, setJobs] = useState<JobCardData[]>([]);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(params.get("q") ?? "");
   const [modality, setModality] = useState("");
   const [type, setType] = useState("");
   const [loading, setLoading] = useState(true);
@@ -15,11 +26,11 @@ export default function EmpleosPage() {
   useEffect(() => {
     const t = setTimeout(() => {
       setLoading(true);
-      const params = new URLSearchParams();
-      if (q) params.set("q", q);
-      if (modality) params.set("modality", modality);
-      if (type) params.set("type", type);
-      api<{ jobs: JobCardData[] }>(`/api/jobs?${params}`)
+      const query = new URLSearchParams();
+      if (q) query.set("q", q);
+      if (modality) query.set("modality", modality);
+      if (type) query.set("type", type);
+      api<{ jobs: JobCardData[] }>(`/api/jobs?${query}`)
         .then((d) => setJobs(d.jobs))
         .catch(() => setJobs([]))
         .finally(() => setLoading(false));
@@ -29,7 +40,12 @@ export default function EmpleosPage() {
 
   return (
     <div>
-      <PageTitle title="Empleos" subtitle="Buscá oportunidades en Posadas y el NEA." />
+      <PageHero
+        eyebrow="Oportunidades"
+        title="Empleos en Posadas y el NEA"
+        subtitle="Filtrá por modalidad y tipo de contrato, y postulate en un clic."
+        image="/art/toucan-hero.jpg"
+      />
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
         <Input placeholder="Buscar por título, skill o empresa…" value={q} onChange={(e) => setQ(e.target.value)} />
         <Select value={modality} onChange={(e) => setModality(e.target.value)}>
@@ -47,13 +63,19 @@ export default function EmpleosPage() {
         </Select>
       </div>
       {loading ? (
-        <p className="text-sm text-forest-700/70">Cargando empleos…</p>
+        <div className="grid gap-4 md:grid-cols-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-44 animate-pulse rounded-2xl bg-white/70 ring-1 ring-forest-100" />
+          ))}
+        </div>
       ) : jobs.length === 0 ? (
-        <Empty title="No hay empleos con esos filtros" />
+        <Empty title="No hay empleos con esos filtros">Probá con otra palabra o quitá algún filtro.</Empty>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
+          {jobs.map((job, i) => (
+            <div key={job.id} className="animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 60}ms` }}>
+              <JobCard job={job} />
+            </div>
           ))}
         </div>
       )}

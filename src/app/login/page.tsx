@@ -36,7 +36,22 @@ function LoginForm() {
   return (
     <div className="mx-auto grid max-w-4xl items-center gap-10 md:grid-cols-2">
       <div className="hidden md:block">
-        <Image src="/toucan-mate.jpg" alt="Tucán tomando mate" width={480} height={480} className="rounded-[2rem] object-cover shadow-glow" />
+        <div className="relative">
+          <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-forest-400/40 to-river-500/40 blur-2xl" />
+          <Image
+            src="/art/toucan-hero.jpg"
+            alt="Tucán tomando mate mientras busca trabajo"
+            width={1024}
+            height={768}
+            priority
+            sizes="(max-width: 768px) 100vw, 440px"
+            className="relative animate-float-slow rounded-[2rem] object-cover shadow-float ring-4 ring-white/80"
+          />
+        </div>
+        <p className="mt-6 font-display text-2xl font-bold text-forest-950">
+          Bienvenido de vuelta <span className="text-gradient">al mate</span>.
+        </p>
+        <p className="mt-1 text-sm text-forest-700/80">Tus postulaciones y tu perfil te están esperando.</p>
       </div>
       <div className="rounded-3xl border border-forest-100 bg-white/90 p-8 shadow-soft">
         <h1 className="font-display text-3xl font-bold text-forest-950">Ingresar</h1>

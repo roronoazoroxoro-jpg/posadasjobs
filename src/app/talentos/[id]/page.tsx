@@ -4,9 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { ExternalLink, Github, Mail, Phone, Sparkles } from "lucide-react";
+import { Download, ExternalLink, Github, Mail, Phone, Sparkles } from "lucide-react";
 import { api } from "@/lib/format";
-import { Badge, Button, PageTitle } from "@/components/ui";
+import { Badge, Button } from "@/components/ui";
+import { CvViewer } from "@/components/CvViewer";
 
 type Project = { name: string; description: string; url?: string };
 
@@ -29,6 +30,9 @@ type Candidate = {
   projects: Project[];
   languages: string[];
   featured: boolean;
+  cvFileUrl: string;
+  cvFileName: string;
+  cvPreviews: string[];
 };
 
 export default function TalentoDetailPage() {
@@ -92,6 +96,11 @@ export default function TalentoDetailPage() {
                     <ExternalLink className="h-4 w-4" /> Portfolio
                   </Button>
                 </a>
+              ) : null}
+              {candidate.cvFileUrl || candidate.cvText ? (
+                <Button type="button" variant="secondary" onClick={() => setTab("cv")}>
+                  <Download className="h-4 w-4" /> Ver / descargar CV
+                </Button>
               ) : null}
             </div>
           </div>
@@ -196,11 +205,14 @@ export default function TalentoDetailPage() {
       ) : null}
 
       {tab === "cv" ? (
-        <div className="rounded-3xl border border-forest-100 bg-white/90 p-6 shadow-soft">
-          <PageTitle title="Curriculum" subtitle="Texto completo listo para lectura / copia." />
-          <pre className="overflow-auto whitespace-pre-wrap rounded-2xl bg-forest-950 p-5 text-xs leading-relaxed text-forest-50 sm:text-sm">
-            {candidate.cvText || "Sin CV cargado."}
-          </pre>
+        <div>
+          <CvViewer
+            name={candidate.name}
+            cvText={candidate.cvText}
+            cvFileUrl={candidate.cvFileUrl}
+            cvFileName={candidate.cvFileName}
+            cvPreviews={candidate.cvPreviews}
+          />
           <div className="mt-4">
             <Link href="/empleos" className="text-sm font-semibold text-river-700 hover:underline">
               Ver empleos compatibles →

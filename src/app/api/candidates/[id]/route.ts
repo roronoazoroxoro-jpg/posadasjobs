@@ -34,6 +34,9 @@ export async function GET(_request: Request, ctx: Ctx) {
       projects: parseProjects(candidate.projects),
       languages: parseJsonArray(candidate.languages),
       featured: candidate.featured,
+      cvFileUrl: candidate.cvFileUrl,
+      cvFileName: candidate.cvFileName,
+      cvPreviews: parseJsonArray(candidate.cvPreviews),
     },
   });
 }

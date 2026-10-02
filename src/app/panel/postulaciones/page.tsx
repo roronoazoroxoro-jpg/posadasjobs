@@ -29,6 +29,8 @@ type CompanyApp = {
     location: string;
     phone: string;
     cvText: string;
+    cvFileUrl: string;
+    cvFileName: string;
     availability: string;
   };
 };
@@ -125,6 +127,20 @@ export default function PostulacionesPage() {
                       <Badge key={s}>{s}</Badge>
                     ))}
                   </div>
+                  {a.candidate.cvFileUrl ? (
+                    <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+                      <a href={a.candidate.cvFileUrl} target="_blank" rel="noreferrer" className="text-river-700 hover:underline">
+                        Ver CV (PDF)
+                      </a>
+                      <a
+                        href={a.candidate.cvFileUrl.startsWith("/api/") ? `${a.candidate.cvFileUrl}?download=1` : a.candidate.cvFileUrl}
+                        download={a.candidate.cvFileName || "curriculum.pdf"}
+                        className="text-forest-700 hover:underline"
+                      >
+                        Descargar CV
+                      </a>
+                    </div>
+                  ) : null}
                   {a.candidate.cvText ? (
                     <details className="mt-3">
                       <summary className="cursor-pointer text-sm font-semibold text-river-700">Ver CV</summary>

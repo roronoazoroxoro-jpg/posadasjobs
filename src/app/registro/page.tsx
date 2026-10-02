@@ -42,7 +42,18 @@ function RegisterForm() {
   return (
     <div className="mx-auto grid max-w-4xl items-center gap-10 md:grid-cols-2">
       <div className="hidden md:block">
-        <Image src="/toucan-mate.jpg" alt="Tucán tomando mate" width={480} height={480} className="rounded-[2rem] object-cover shadow-glow" />
+        <div className="relative">
+          <div className="absolute -inset-4 rounded-[2.5rem] bg-gradient-to-br from-forest-400/40 to-river-500/40 blur-2xl" />
+          <Image
+            src={role === "COMPANY" ? "/art/toucan-interview.jpg" : "/art/toucan-hired.jpg"}
+            alt="Ilustración del tucán de PosadasJobs"
+            width={512}
+            height={512}
+            priority
+            sizes="(max-width: 768px) 100vw, 440px"
+            className="relative animate-float-slow rounded-[2rem] object-cover shadow-float ring-4 ring-white/80"
+          />
+        </div>
         <p className="mt-4 font-display text-2xl font-bold text-forest-950">
           Unite a Posadas<span className="text-river-600">Jobs</span>
         </p>

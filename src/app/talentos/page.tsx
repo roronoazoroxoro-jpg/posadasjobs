@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/format";
 import { TalentCard, type TalentCardData } from "@/components/TalentCard";
-import { Empty, Input, PageTitle } from "@/components/ui";
+import { PageHero } from "@/components/PageHero";
+import { Empty, Input } from "@/components/ui";
 
 const POPULAR = ["React", "Python", "Go", "Next.js", "OpenCV", "MikroTik", "PostgreSQL", "IA"];
 
@@ -30,7 +31,12 @@ export default function TalentosPage() {
 
   return (
     <div>
-      <PageTitle title="Talentos" subtitle="Perfiles técnicos de Posadas y el NEA listos para contactar." />
+      <PageHero
+        eyebrow="Vitrina de talento"
+        title="Talentos del NEA"
+        subtitle="Perfiles técnicos con CV, skills y proyectos reales, listos para contactar."
+        image="/art/toucan-cv.jpg"
+      />
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
         <Input className="sm:max-w-md" placeholder="Buscar por nombre, skill o proyecto…" value={q} onChange={(e) => setQ(e.target.value)} />
         <p className="text-sm text-forest-600">{loading ? "Buscando…" : countLabel}</p>
@@ -62,8 +68,10 @@ export default function TalentosPage() {
         <Empty title="No hay talentos con esa búsqueda" />
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
-          {candidates.map((c) => (
-            <TalentCard key={c.id} talent={c} />
+          {candidates.map((c, i) => (
+            <div key={c.id} className="animate-fade-up" style={{ animationDelay: `${Math.min(i, 8) * 70}ms` }}>
+              <TalentCard talent={c} />
+            </div>
           ))}
         </div>
       )}

@@ -208,6 +208,7 @@ async function main() {
   // Reset clean seed so Valentin always is the featured profile
   await prisma.application.deleteMany();
   await prisma.savedJob.deleteMany();
+  await prisma.cvFile.deleteMany();
   await prisma.job.deleteMany();
   await prisma.candidateProfile.deleteMany();
   await prisma.companyProfile.deleteMany();
@@ -238,6 +239,9 @@ async function main() {
           projects: JSON.stringify(VALENTIN_PROJECTS),
           languages: JSON.stringify(["Español — Nativo", "Inglés — Avanzado"]),
           featured: true,
+          cvFileUrl: "/cv/CV_Valentin_Vazquez_2026.pdf",
+          cvFileName: "CV_Valentin_Vazquez_2026.pdf",
+          cvPreviews: JSON.stringify(["/cv/valentin-p1.png", "/cv/valentin-p2.png"]),
         },
       },
     },

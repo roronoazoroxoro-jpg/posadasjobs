@@ -40,10 +40,23 @@ model CandidateProfile {
   projects     String   @default("[]")
   languages    String   @default("[]")
   featured     Boolean  @default(false)
+  cvFileUrl    String   @default("")
+  cvFileName   String   @default("")
+  cvPreviews   String   @default("[]")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   applications Application[]
+  cvFile       CvFile?
+}
+
+model CvFile {
+  id          String           @id @default(cuid())
+  candidateId String           @unique
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  data        Bytes
+  size        Int
+  createdAt   DateTime         @default(now())
 }
 
 model CompanyProfile {

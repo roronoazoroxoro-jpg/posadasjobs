@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode, TextareaHTMLAttributes } from "react";
 
 export function Button({
@@ -6,10 +7,10 @@ export function Button({
   ...props
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "secondary" | "ghost" | "danger" }) {
   const base =
-    "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition disabled:opacity-50";
+    "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition duration-200 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-50";
   const variants = {
-    primary: "bg-gradient-to-r from-forest-600 to-river-600 text-white shadow-soft hover:brightness-110",
-    secondary: "bg-white text-forest-800 ring-1 ring-forest-200 hover:bg-forest-50",
+    primary: "btn-shine bg-gradient-to-r from-forest-600 to-river-600 text-white shadow-soft hover:-translate-y-0.5 hover:shadow-glow",
+    secondary: "bg-white text-forest-800 ring-1 ring-forest-200 hover:-translate-y-0.5 hover:bg-forest-50",
     ghost: "text-forest-800 hover:bg-forest-50",
     danger: "bg-red-600 text-white hover:bg-red-700",
   };
@@ -76,9 +77,16 @@ export function Badge({ children, tone = "green" }: { children: ReactNode; tone?
 
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {
   return (
-    <div className="rounded-2xl border border-dashed border-forest-200 bg-white/60 px-6 py-12 text-center">
-      <p className="font-display text-lg font-semibold text-forest-900">{title}</p>
-      {children ? <div className="mt-3 text-sm text-forest-700/80">{children}</div> : null}
+    <div className="animate-fade-up rounded-3xl border border-dashed border-forest-200 bg-white/70 px-6 py-12 text-center">
+      <Image
+        src="/art/toucan-cv.jpg"
+        alt=""
+        width={160}
+        height={160}
+        className="mx-auto h-28 w-28 animate-float rounded-3xl object-cover shadow-soft ring-4 ring-white"
+      />
+      <p className="mt-5 font-display text-lg font-semibold text-forest-900">{title}</p>
+      {children ? <div className="mt-2 text-sm text-forest-700/80">{children}</div> : null}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import { dirname, join } from "path";
 
 /** Bump this when seed data changes so Vercel /tmp refreshes. */
-export const SEED_VERSION = "2026-10-02-valentin-v2";
+export const SEED_VERSION = "2026-10-02-cv-pdf-v3";
 
 /**
  * En Vercel el filesystem es efímero salvo /tmp.

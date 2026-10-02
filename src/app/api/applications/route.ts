@@ -70,6 +70,8 @@ export async function GET(request: Request) {
           location: a.candidate.location,
           phone: a.candidate.phone,
           cvText: a.candidate.cvText,
+          cvFileUrl: a.candidate.cvFileUrl,
+          cvFileName: a.candidate.cvFileName,
           availability: a.candidate.availability,
         },
       })),

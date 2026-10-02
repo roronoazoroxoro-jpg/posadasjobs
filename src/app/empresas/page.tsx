@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Building2, MapPin } from "lucide-react";
 import { api } from "@/lib/format";
-import { Badge, Empty, PageTitle } from "@/components/ui";
+import { PageHero } from "@/components/PageHero";
+import { Badge, Empty } from "@/components/ui";
 
 type Company = {
   id: string;
@@ -28,7 +29,12 @@ export default function EmpresasPage() {
 
   return (
     <div>
-      <PageTitle title="Empresas" subtitle="Conocé quién está buscando talento en Posadas." />
+      <PageHero
+        eyebrow="Quién contrata"
+        title="Empresas de Posadas"
+        subtitle="Conocé las empresas que buscan talento en la región y sus puestos abiertos."
+        image="/art/toucan-interview.jpg"
+      />
       {loading ? (
         <p className="text-sm text-forest-700/70">Cargando…</p>
       ) : companies.length === 0 ? (

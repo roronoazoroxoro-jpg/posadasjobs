@@ -90,6 +90,9 @@ export function publicUser(user: SessionUser) {
           projects: parseProjects(user.candidate.projects),
           languages: parseJsonArray(user.candidate.languages),
           featured: user.candidate.featured,
+          cvFileUrl: user.candidate.cvFileUrl,
+          cvFileName: user.candidate.cvFileName,
+          cvPreviews: parseJsonArray(user.candidate.cvPreviews),
         }
       : null,
     company: user.company
